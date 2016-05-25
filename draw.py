@@ -5,31 +5,146 @@ from math import cos, sin, pi
 
 MAX_STEPS = 100
 
+zbuffer = [[-5000 for x in range(500)] for x in range(500)] 
+def clear_zbuffer():
+    global zbuffer
+    zbuffer = [[-5000 for x in range(500)] for x in range(500)] 
 
-def add_polygon( points, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
+def add_polygon( points, x0, y0, z0, x1, y1, z1, x2, y2, z2):
     add_point( points, x0, y0, z0 )
     add_point( points, x1, y1, z1 )
     add_point( points, x2, y2, z2 )
-    
-def draw_polygons( points, screen, color ):
+   
+def add_polygon_p(points, p0, p1, p2):
+    add_polygon(points, 
+                p0[0], p0[1], p0[2],
+                p1[0], p1[1], p1[2],
+                p2[0], p2[1], p2[2])
 
-    if len(points) < 3:
-        print 'Need at least 3 points to draw a polygon!'
-        return
+def draw_polygons(points, screen, env):
+    color = [100,100,100] #placeholder
+    def sortaequal(a,b,tol):
+        return abs(a-b)<tol
+    def light(x,y,z,ka,kd,ks): #placeholder
+        colortmp = [0,0,0]
+        ia = env["ambient"]
+        for i in range(3):
+            ambient = ka[i] * ia[i]
+            colortmp[i] += ambient
+            for light in env["lights"]:
+                vector_l = vect_minus(light[3:],p0)
+                n_surf_norm = normalize(surf_norm)
+                n_vector_l = normalize(vector_l)
+                
+                diffuse = kd[i] * light[i] * \
+                          max(0, dot_prod(n_surf_norm, 
+                                          n_vector_l))
+
+                n_x_vect = cross_prod(n_surf_norm, n_vector_l)
+                specular_r_vec = normalize(vect_minus(scalar_prod(2,n_x_vect),n_vector_l))
+                view_vec = normalize(vect_minus(p0,[0,0,-1]))
+                
+                specular = ks[i] * light[i] * \
+                           max(0, dot_prod(specular_r_vec,
+                                           view_vec)) ** 15
+
+                colortmp[i] += diffuse+specular
+                colortmp[i] = int(min(colortmp[i],255))
+        return colortmp
+            
+    def scanlines(p0,p1,p2):
+        if env["shading_mode"] == "flat":
+            colortmp = light(p0[0],p0[1],p0[2],
+                             (0.8,0.8,0.8), #k-ambient
+                             (0.8,0.8,0.8), #k-diffuse
+                             (0.8,0.8,0.8)  #k-specular
+                            )
+        else:
+            colortmp = random.sample(xrange(255),3)
+    
+        for i in range(3):
+            p0[i] = math.floor(p0[i])
+            p1[i] = math.floor(p1[i])
+            p2[i] = math.floor(p2[i])
+        
+        pts = sorted( (p0,p1,p2), key=lambda pt: pt[1])
+        top = pts[0]; mid = pts[1]; bot = pts[2]
+
+        yi = top[1]
+        x0 = top[0]
+        x1 = top[0]
+        z0 = top[2]
+        z1 = top[2]
+
+        #if sortaequal(bot[1],top[1], 0.0001):
+        if bot[1] == top[1]:
+            dx0 = 0
+            dz0 = 0
+        else:
+            dx0 = (bot[0]-top[0])/(bot[1]-top[1])
+            dz0 = (bot[2]-top[2])/(bot[1]-top[1])
+
+        #if sortaequal(mid[1],top[1], 0.0001):
+        if mid[1] == top[1]:
+            dx1m = 0
+            dz1m = 0
+        else:
+            dx1m = (mid[0]-top[0])/(mid[1]-top[1])
+            dz1m = (mid[2]-top[2])/(mid[1]-top[1])
+
+        #if sortaequal(bot[1],mid[1], 0.0001):
+        if bot[1] == mid[1]:
+            dx1b = 0
+            dz1b = 0
+        else:
+            dx1b = (bot[0]-mid[0])/(bot[1]-mid[1])
+            dz1b = (bot[2]-mid[2])/(bot[1]-mid[1])
+
+        while yi < mid[1]:
+            x1 += dx1m
+            z1 += dz1m
+            yi += 1
+            x0 += dx0
+            z0 += dz0
+            draw_line(screen, x0,yi,z0, x1,yi,z1, colortmp)
+        x1 = mid[0]
+        yi = mid[1]
+        z1 = mid[2]
+        draw_line(screen, x0,yi,z0, x1,yi,z1, colortmp)
+        while yi < bot[1]:
+            x0 += dx0
+            z0 += dz0
+            x1 += dx1b
+            z1 += dz1b
+            yi += 1
+            draw_line(screen, x0,yi,z0, x1,yi,z1, colortmp)
+            
+            
+
+    def draw_polygon(p0,p1,p2, c):
+        if env["shading_mode"]=="wireframe":
+            draw_line(screen, p0[0],p0[1],p0[2], p1[0],p1[1],p1[1], c)
+            draw_line(screen, p1[0],p1[1],p1[2], p2[0],p2[1],p2[2], c)
+            draw_line(screen, p2[0],p2[1],p2[2], p0[0],p0[1],p0[2], c)
+        else:
+            scanlines(p0,p1,p2)
+
+    view_vect = [0, 0, -1]
+
+    if len( points ) % 3 !=  0:
+        print "Bad number of points to draw polygons: not div by 3?" 
 
     p = 0
-    while p < len( points ) - 2:
+    while p < len(points)-1:
+        p0 = points[p]
+        p1 = points[p+1]
+        p2 = points[p+2]
+        surf_norm = cross_prod(vect_minus(p1,p0),vect_minus(p2,p0))
 
-        if calculate_dot( points, p ) < 0:
-            draw_line( screen, points[p][0], points[p][1],
-                       points[p+1][0], points[p+1][1], color )
-            draw_line( screen, points[p+1][0], points[p+1][1],
-                       points[p+2][0], points[p+2][1], color )
-            draw_line( screen, points[p+2][0], points[p+2][1],
-                       points[p][0], points[p][1], color )
-        p+= 3
+        if dot_prod(surf_norm, view_vect) < 0:
+            draw_polygon(points[p], points[p+1], points[p+2], color)
 
-
+        p+=3
 
 def add_box( points, x, y, z, width, height, depth ):
     x1 = x + width
