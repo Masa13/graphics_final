@@ -22,10 +22,10 @@ def add_polygon_p(points, p0, p1, p2):
                 p2[0], p2[1], p2[2])
 
 def draw_polygons(points, screen, env):
-    color = [100,100,100] #placeholder
+    color = [100,100,100] 
     def sortaequal(a,b,tol):
         return abs(a-b)<tol
-    def light(x,y,z,ka,kd,ks): #placeholder
+    def light(x,y,z,ka,kd,ks): 
         colortmp = [0,0,0]
         ia = env["ambient"]
         for i in range(3):
@@ -55,9 +55,9 @@ def draw_polygons(points, screen, env):
     def scanlines(p0,p1,p2):
         if env["shading_mode"] == "flat":
             colortmp = light(p0[0],p0[1],p0[2],
-                             (0.8,0.8,0.8), #k-ambient
-                             (0.8,0.8,0.8), #k-diffuse
-                             (0.8,0.8,0.8)  #k-specular
+                             (0.8,0.8,0.8), 
+                             (0.8,0.8,0.8), 
+                             (0.8,0.8,0.8)  
                             )
         else:
             colortmp = random.sample(xrange(255),3)
@@ -76,7 +76,6 @@ def draw_polygons(points, screen, env):
         z0 = top[2]
         z1 = top[2]
 
-        #if sortaequal(bot[1],top[1], 0.0001):
         if bot[1] == top[1]:
             dx0 = 0
             dz0 = 0
@@ -84,7 +83,6 @@ def draw_polygons(points, screen, env):
             dx0 = (bot[0]-top[0])/(bot[1]-top[1])
             dz0 = (bot[2]-top[2])/(bot[1]-top[1])
 
-        #if sortaequal(mid[1],top[1], 0.0001):
         if mid[1] == top[1]:
             dx1m = 0
             dz1m = 0
@@ -92,7 +90,6 @@ def draw_polygons(points, screen, env):
             dx1m = (mid[0]-top[0])/(mid[1]-top[1])
             dz1m = (mid[2]-top[2])/(mid[1]-top[1])
 
-        #if sortaequal(bot[1],mid[1], 0.0001):
         if bot[1] == mid[1]:
             dx1b = 0
             dz1b = 0
@@ -132,7 +129,7 @@ def draw_polygons(points, screen, env):
     view_vect = [0, 0, -1]
 
     if len( points ) % 3 !=  0:
-        print "Bad number of points to draw polygons: not div by 3?" 
+        print "Choose different number of points to draw polygon" 
 
     p = 0
     while p < len(points)-1:
