@@ -5,6 +5,7 @@ from math import cos, sin, pi
 
 MAX_STEPS = 100
 
+
 def add_polygon( points, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point( points, x0, y0, z0 )
     add_point( points, x1, y1, z1 )
