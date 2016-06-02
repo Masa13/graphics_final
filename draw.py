@@ -1,7 +1,10 @@
 from display import *
 from matrix import *
+from vector import *
 from gmath import calculate_dot
 from math import cos, sin, pi
+from sys import maxint
+import random
 
 MAX_STEPS = 100
 
