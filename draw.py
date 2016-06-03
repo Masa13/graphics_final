@@ -5,6 +5,7 @@ from gmath import calculate_dot
 from math import cos, sin, pi
 from sys import maxint
 import random
+#import math
 
 MAX_STEPS = 100
 
